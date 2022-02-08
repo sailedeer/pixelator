@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <time.h>
 
 #include <image.h>
 
@@ -56,10 +57,10 @@ static int pixelate(image img, int ratio, image *out) {
 
 int main(int argc, char **argv) {
     /* stores the path to the image to be pixelated */
-    char orig_filepath[FILENAME_MAX];
+    char orig_filepath[FILENAME_MAX + 1];
 
     /* stores the output path of the pixelated image */
-    char p_filepath[FILENAME_MAX];
+    char p_filepath[FILENAME_MAX + 1];
 
     /* pixelation ratio */
     int ratio;
@@ -72,6 +73,9 @@ int main(int argc, char **argv) {
 
     /* status code from functions */
     int status;
+
+    /* for measuring execution time */
+    clock_t t;
 
     /* Check CLI arguments */
     if (argc != 4) {
@@ -92,23 +96,28 @@ int main(int argc, char **argv) {
     }
 
     p_img = copy_image(orig_img);
-    status = write_image(p_filepath, p_img);
     if (status < 0) {
         fprintf(stderr, "Failed to write image to file.\n");
         return EXIT_FAILURE;
     }
 
+    printf("Pixelating image...\n");
+    t = clock();
     status = pixelate(orig_img, ratio, &p_img);
+    t = clock() - t;
     if (status < 0) {
         fprintf(stderr, "Failed to pixelate image.\n");
         return EXIT_FAILURE;
     }
+    printf("Pixelated %s in %lf seconds.\n", orig_filepath, ((double)t) / CLOCKS_PER_SEC);
 
+    printf("Writing pixelated image to %s... ", p_filepath);
     status = write_image(p_filepath, p_img);
     if (status < 0) {
         fprintf(stderr, "Failed to write image to file.\n");
         return EXIT_FAILURE;
     }
+    printf("Done!\n");
     free_image(&orig_img);
     free_image(&p_img);
     return EXIT_SUCCESS;
