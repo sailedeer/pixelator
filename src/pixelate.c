@@ -16,9 +16,10 @@
 #define PXLT_ARG_ERR        (PXLT_ERR + 1)
 
 /*
- * Pixelates some image 'img' into AR preserving
- * 'pixels' given the value of 'ratio'. Places image in 'out',
- * and returns 0 on success, negative otherwise.
+ *
+ * Pixelates some image 'img' based on the requested x and y cells.
+ * Places pixelated image in 'out'. Returns 0 on success,
+ * negative otherwise.
  *
  */
 static int pixelate(image img, int x_cells, int y_cells, image *out) {
