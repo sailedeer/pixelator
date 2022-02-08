@@ -21,7 +21,7 @@
  * and returns 0 on success, negative otherwise.
  *
  */
-static int pixelate(image img, int ratio, image *out) {
+static int pixelate(image img, int x_cells, int y_cells, image *out) {
     int x_incr, y_incr;
     int x_off, y_off;
     int x, y, c;
@@ -29,8 +29,9 @@ static int pixelate(image img, int ratio, image *out) {
     if (NULL_PTR(out)) {
         return -(PXLT_ARG_ERR);
     }
-    x_incr = img.w / ratio;
-    y_incr = img.h / ratio;
+
+    x_incr = img.w / x_cells;
+    y_incr = img.h / y_cells;
 
     for (c = 0; c < img.c; c++) {
         for (y_off = 0; y_off < img.h; y_off += y_incr) {
@@ -62,8 +63,11 @@ int main(int argc, char **argv) {
     /* stores the output path of the pixelated image */
     char p_filepath[FILENAME_MAX + 1];
 
-    /* pixelation ratio */
-    int ratio;
+    /* number of x cells to generate */
+    int x_cells;
+
+    /* number of y cells to generate */
+    int y_cells;
 
     /* original image attributes */
     image orig_img;
@@ -78,16 +82,17 @@ int main(int argc, char **argv) {
     clock_t t;
 
     /* Check CLI arguments */
-    if (argc != 4) {
-        fprintf(stderr, "Usage: pixelate <input file> <ratio> <output file>");
+    if (argc != 5) {
+        fprintf(stderr, "Usage: pixelate <input file> <x increment> <y increment> <output file>");
         return EXIT_FAILURE;
     }
 
     /* be bad and naively assume that these args aren't malformed */
     /* TODO: don't be bad and naively assume that these args aren't malformed */
     strcpy(orig_filepath, argv[1]);
-    ratio = atoi(argv[2]);
-    strcpy(p_filepath, argv[3]);
+    x_cells = atoi(argv[2]);
+    y_cells = atoi(argv[3]);
+    strcpy(p_filepath, argv[4]);
 
     status = read_image(orig_filepath, CHANNELS_IN_IMAGE, &orig_img);
     if (status < 0) {
@@ -103,7 +108,7 @@ int main(int argc, char **argv) {
 
     printf("Pixelating image...\n");
     t = clock();
-    status = pixelate(orig_img, ratio, &p_img);
+    status = pixelate(orig_img, x_cells, y_cells, &p_img);
     t = clock() - t;
     if (status < 0) {
         fprintf(stderr, "Failed to pixelate image.\n");
