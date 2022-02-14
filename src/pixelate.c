@@ -22,7 +22,7 @@
  * negative otherwise.
  *
  */
-static int pixelate(image img, int x_cells, int y_cells, image *out) {
+static int pixelate(image img, int x_cells, int y_cells, int borders, image *out) {
     int x_incr, y_incr;
     int x_off, y_off;
     int x, y, c;
@@ -50,6 +50,45 @@ static int pixelate(image img, int x_cells, int y_cells, image *out) {
                         set_pixel(*out, x, y, c, q_c);
                     }
                 }
+                if (borders) {
+                    // draw the border in the x-direction
+                    if (y_off % 32 == 0) {
+                        for (y = y_off - 2; y < (y_off + 2); y++) {
+                            for (x = x_off; x < (x_off + x_incr); x++) {
+                                if (!(y_off == 0) && !(y_off == (img.h - 1))) {
+                                    set_pixel(*out, x, y, c, 0);
+                                }
+                            }
+                        }
+                    } else {
+                        for (y = y_off - 1; y < (y_off + 1); y++) {
+                            for (x = x_off; x < (x_off + x_incr); x++) {
+                                if (!(y_off == 0) && !(y_off == (img.h - 1))) {
+                                    set_pixel(*out, x, y, c, 0);
+                                }
+                            }
+                        }
+                    }
+
+                    // draw the border in the y-direction
+                    if (x_off % 32 == 0) {
+                        for (y = y_off; y < (y_off + y_incr); y++) {
+                            for (x = x_off - 2; x < (x_off + 2); x++) {
+                                if (!(x_off == 0) && !(x_off == (img.w - 1))) {
+                                    set_pixel(*out, x, y, c, 0);
+                                }
+                            }
+                        }
+                    } else {
+                        for (y = y_off; y < (y_off + y_incr); y++) {
+                            for (x = x_off - 1; x < (x_off + 1); x++) {
+                                if (!(x_off == 0) && !(x_off == (img.w - 1))) {
+                                    set_pixel(*out, x, y, c, 0);
+                                }
+                            }
+                        }
+                    }               
+                }
             }
         }
     }
@@ -70,6 +109,9 @@ int main(int argc, char **argv) {
     /* number of y cells to generate */
     int y_cells;
 
+    /* flag which indicates whether or not we should draw cell borders */
+    int borders;
+
     /* original image attributes */
     image orig_img;
 
@@ -83,8 +125,8 @@ int main(int argc, char **argv) {
     clock_t t;
 
     /* Check CLI arguments */
-    if (argc != 5) {
-        fprintf(stderr, "Usage: pixelate <input file> <x increment> <y increment> <output file>");
+    if (argc < 5) {
+        fprintf(stderr, "Usage: pixelate <input file> <x increment> <y increment> <output file> [--no-border]");
         return EXIT_FAILURE;
     }
 
@@ -94,6 +136,11 @@ int main(int argc, char **argv) {
     x_cells = atoi(argv[2]);
     y_cells = atoi(argv[3]);
     strcpy(p_filepath, argv[4]);
+    if ((argc == 6) && (strcmp(argv[5], "--no-border") == 0)) {
+        borders = 0;
+    } else {
+        borders = 1;
+    }
 
     status = read_image(orig_filepath, CHANNELS_IN_IMAGE, &orig_img);
     if (status < 0) {
@@ -109,7 +156,7 @@ int main(int argc, char **argv) {
 
     printf("Pixelating image...\n");
     t = clock();
-    status = pixelate(orig_img, x_cells, y_cells, &p_img);
+    status = pixelate(orig_img, x_cells, y_cells, borders, &p_img);
     t = clock() - t;
     if (status < 0) {
         fprintf(stderr, "Failed to pixelate image.\n");
