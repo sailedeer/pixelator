@@ -8,6 +8,10 @@
 #define IMG_IO_ERR      (IMG_ERR + 0)
 #define IMG_ARG_ERR     (IMG_ERR + 1)
 
+#define R(p)            ((p & (0x000000FF)))
+#define G(p)            ((p & (0x0000FF00)) >> 8)
+#define B(p)            ((p & (0x00FF0000)) >> 16)
+
 /*
  *
  * Encapsulates data about an image.
