@@ -6,7 +6,7 @@
 
 #include <image.h>
 
-#define CHANNELS_IN_IMAGE   0
+#define USE_IMAGE_CHANNELS   0
 
 #define NULL_PTR(addr)      (addr == NULL)
 
@@ -14,6 +14,26 @@
 #define PXLT_ERR            1
 #define PXLT_IO_ERR         (PXLT_ERR + 0)
 #define PXLT_ARG_ERR        (PXLT_ERR + 1)
+
+static int verify_args(int argc, char **argv) {
+    char *end;
+
+    if (argc < 5) {
+        return 0;
+    }
+
+    if (strtol(argv[2], &end, 10) == 0 && *end == 0) {
+        // no valid conversion
+        return 0;
+    }
+
+    if (strtol(argv[3], &end, 10) == 0 && *end == 0) {
+        // no valid conversion
+        return 0;
+    } 
+
+    return 1;
+}
 
 /*
  *
@@ -87,7 +107,7 @@ static int pixelate(image img, int x_cells, int y_cells, int borders, image *out
                                 }
                             }
                         }
-                    }               
+                    }
                 }
             }
         }
@@ -125,7 +145,7 @@ int main(int argc, char **argv) {
     clock_t t;
 
     /* Check CLI arguments */
-    if (argc < 5) {
+    if (!verify_args(argc, argv)) {
         fprintf(stderr, "Usage: pixelate <input file> <x increment> <y increment> <output file> [--no-border]");
         return EXIT_FAILURE;
     }
@@ -142,7 +162,7 @@ int main(int argc, char **argv) {
         borders = 1;
     }
 
-    status = read_image(orig_filepath, CHANNELS_IN_IMAGE, &orig_img);
+    status = read_image(orig_filepath, USE_IMAGE_CHANNELS, &orig_img);
     if (status < 0) {
         fprintf(stderr, "Failed to load image from file.\n");
         return EXIT_FAILURE;

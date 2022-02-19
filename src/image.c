@@ -11,10 +11,10 @@
 #define NULL_PTR(addr) (addr == NULL)
 
 static inline int image_index(image img, int x, int y, int c) {
-    return (img.size * c + img.w * y + x);
+    return (c + img.c * x + img.c * img.w * y);
 }
 
-/* Clamps the given coordinates to be within the bounds the image */
+/* Clamps the given coordinates to be within the bounds of the image */
 static inline void clamp_coordinates(image img, int *x, int *y, int *c) {
     *x = *x < 0 ? 0 : ((*x >= img.w) ? img.w - 1 : *x);
     *y = *y < 0 ? 0 : ((*y >= img.h) ? img.h - 1 : *y);
@@ -57,7 +57,7 @@ image copy_image(image src) {
 int read_image(const char *filepath, int force_channels, image *out) {
     uint8_t *data;
     int w, h, c;
-    int i, j, k;
+    // int i, j, k;
 
     if (NULL_PTR(out)) {
         return -(IMG_ARG_ERR);
@@ -69,34 +69,19 @@ int read_image(const char *filepath, int force_channels, image *out) {
     }
 
     *out = make_image(w, h, c);
-    for (k = 0; k < c; ++k){
-        for (j = 0; j < h; ++j){
-            for (i = 0; i < w; ++i){
-                int dst_index = i + w*j + w*h*k;
-                int src_index = k + c*i + c*w*j;
-                out->data[dst_index] = data[src_index];
-            }
-        }
-    }
+    memcpy(out->data, data, w * h * c);
     free(data);
     return IMG_NO_ERR;
 }
 
 int write_image(const char *filepath, image img) {
     int status;
-    unsigned char *data = calloc(img.w*img.h*img.c, sizeof(char));
-    int i,k;
-    for(k = 0; k < img.c; ++k){
-        for(i = 0; i < img.w*img.h; ++i){
-            data[i*img.c+k] = img.data[i + k*img.w*img.h];
-        }
-    }
-    if (stbi_write_jpg(filepath, img.w, img.h, img.c, data, 100)) {
+    if (stbi_write_jpg(filepath, img.w, img.h, img.c, img.data, 100)) {
         status = IMG_NO_ERR;
     } else {
         status = -(IMG_IO_ERR);
     }
-    free(data);
+    // free(data);
     return status;
 }
 

@@ -3,9 +3,10 @@
 #ifndef _IMAGE_H
 #define _IMAGE_H
 
-#define IMG_NO_ERR 0
-#define IMG_IO_ERR 1
-#define IMG_ARG_ERR 2
+#define IMG_NO_ERR      0
+#define IMG_ERR         1
+#define IMG_IO_ERR      (IMG_ERR + 0)
+#define IMG_ARG_ERR     (IMG_ERR + 1)
 
 /*
  *
@@ -14,7 +15,8 @@
  * y: height of image in pixels (top to bottom)
  * c: number of image channels
  * size: size in pixels of the image
- * data: in-ram image channel data
+ * length: size in bytes of in-ram image data
+ * data: in-ram image data
  * 
  */
 typedef struct image_st {
