@@ -5,6 +5,7 @@
 #include <time.h>
 
 #include <image.h>
+#include <brick.h>
 
 #define USE_IMAGE_CHANNELS   0
 
@@ -15,9 +16,12 @@
 #define PXLT_IO_ERR         (PXLT_ERR + 0)
 #define PXLT_ARG_ERR        (PXLT_ERR + 1)
 
+static uint16_t brick_bkts[NUM_BRICKS] = {0};
+
 static int verify_args(int argc, char **argv) {
     char *end;
 
+    // minimum of 5 args
     if (argc < 5) {
         return 0;
     }
@@ -30,9 +34,40 @@ static int verify_args(int argc, char **argv) {
     if (strtol(argv[3], &end, 10) == 0 && *end == 0) {
         // no valid conversion
         return 0;
-    } 
+    }
 
     return 1;
+}
+
+static uint8_t assign_r(uint8_t r) {
+    return r;
+}
+
+static uint8_t assign_g(uint8_t g) {
+    return g;
+}
+
+static uint8_t assign_b(uint8_t b) {
+    return b;
+}
+
+/*
+ *
+ * Forces a pixel in the image to be one of a particular set of
+ * colors as defined in brick.h.
+ *
+ */ 
+static uint8_t assign_q(uint8_t q, uint8_t c) {
+    switch (c) {
+        case 0:
+            return assign_r(q);
+        case 1:
+            return assign_g(q);
+        case 2:
+            return assign_b(q);
+        default:
+            return q;
+    }
 }
 
 /*
@@ -54,22 +89,26 @@ static int pixelate(image img, int x_cells, int y_cells, int borders, image *out
     x_incr = img.w / x_cells;
     y_incr = img.h / y_cells;
 
+    // really ugly loops but they get the job done
+    // TODO: maybe replace these with multi-threaded, recursive "block" processors
     for (c = 0; c < img.c; c++) {
         for (y_off = 0; y_off < img.h; y_off += y_incr) {
             for (x_off = 0; x_off < img.w; x_off += x_incr) {
                 int q_c = 0;
                 for (y = y_off; y < (y_off + y_incr); y++) {
                     for (x = x_off; x < (x_off + x_incr); x++) {
-                        uint8_t pixel = get_pixel(img, x, y, c);
-                        q_c += pixel;
+                        q_c += get_pixel(img, x, y, c);
                     }
                 }
+
                 q_c /= (x_incr * y_incr);
                 for (y = y_off; y < (y_off + y_incr); y++) {
                     for (x = x_off; x < (x_off + x_incr); x++) {
+                        assign_q(q_c, c);
                         set_pixel(*out, x, y, c, q_c);
                     }
                 }
+
                 if (borders) {
                     // draw the border in the x-direction
                     if (y_off % 32 == 0) {
